@@ -7,11 +7,13 @@ class func
 {
 public:
 	int n, m;
+	double h;
 	func(void);
 	void read(std::ifstream &size);
 	~func(void);
-	double F1(int i, std::vector<double> &x);
-	void F1(std::vector<double> &F, std::vector<double> &x);
-	double dF1(int i, int j, std::vector<double> &x);
+	double F(int i, std::vector<double> &x);
+	void FullF(std::vector<double> &F, std::vector<double> &x);
+	double dF(int i, int j, std::vector<double> &x);
+	double chisldF(int i, int j, std::vector<double> &x);
 };
 
