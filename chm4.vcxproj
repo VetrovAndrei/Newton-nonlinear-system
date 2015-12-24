@@ -83,7 +83,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="func.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="solve.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="size.txt" />
+    <Text Include="X.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

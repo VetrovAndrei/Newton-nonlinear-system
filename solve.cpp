@@ -60,6 +60,8 @@ void solve::gauss()
 		 std::swap(dx[i],dx[k]);
          for (int j=i+1; j<Fun.n; j++)
          {
+			 if (abs(A[i][i]) < pow(10.0,-15.0))
+				 throw 1;
 			double m = A[j][i]/A[i][i];
             for (int k = 0; k < Fun.n; k++)
 			{
@@ -73,23 +75,35 @@ void solve::gauss()
 		double buf = 0;
         for (int j = k+1; j < Fun.n; j++)
         {
-			buf += A[k][j]*F[j];
+			buf += A[k][j]*dx[j];
         }
         dx[k] = dx[k] - buf;
+		if (abs(A[k][k]) < pow(10.0,-15.0))
+				 throw 1;
         dx[k] = dx[k]/A[k][k];
      }
 }
 
 void solve::jacoby(bool dif)
 {
-	for (int i = 0; i < Fun.m; i++)
+	if (dif)
 	{
-		for (int j = 0; j < Fun.n; j++)
+		for (int i = 0; i < Fun.m; i++)
 		{
-			if (dif)
+			for (int j = 0; j < Fun.n; j++)
+			{
 				A[i][j] = Fun.chisldF(i, j, x);
-			else 
+			}
+		}
+	}
+	else
+	{
+		for (int i = 0; i < Fun.m; i++)
+		{
+			for (int j = 0; j < Fun.n; j++)
+			{
 				A[i][j] = Fun.dF(i, j, x);
+			}
 		}
 	}
 }
@@ -101,12 +115,12 @@ void solve::sortMatrix(int k)
 	for (int i = 1; i <= k; i++)
 	{
 		imin = 0;
-		min = F[0];
-		for (int j = 0; j < Fun.m - i; j++)
+		min = abs(F[0]);
+		for (int j = 0; j < Fun.m - i + 1; j++)
 		{
-			if ( F[j] < min)
+			if (abs(F[j]) < min)
 			{
-				min = F[j];
+				min = abs(F[j]);
 				imin = j;
 			}
 		}
@@ -120,14 +134,14 @@ void solve::sumElements(int k)
 	int i = Fun.m - k;
 	for (int j = 0; j < Fun.n; j++)
 	{
-		A[i][j] *= 2.0;
+		A[i][j] *= 2.0 * F[i];
 	}
 	F[i] = pow(F[i],2.0);
 	for (int k = i + 1; k < Fun.m; k++)
 	{
 		for (int j = 0; j < Fun.n; j++)
 		{
-			A[i][j] += 2.0 * A[k][j];
+			A[i][j] += 2.0 * A[k][j] * F[k];
 		}
 		F[i] += pow(F[k],2.0);
 	}
@@ -137,11 +151,18 @@ int solve::iterationB()
 {
 	B = 1;
 	bool exit = 1;
-	normFk = normFk1;
-	for (int i = 0; i < maxiter && exit != 0; i++)
+	normFk1 = normFk;
+	int i;
+	for (i = 0; i < maxiter && exit != 0; i++)
 	{
-		if(normFk1 < normFk && B < eps1)
+		if(normFk1 < normFk)
 		{
+			exit = 0;
+			break;
+		}
+		if(B < eps1)
+		{
+			i = maxiter;
 			exit = 0;
 			break;
 		}
@@ -155,18 +176,30 @@ int solve::iterationB()
 	}
 	normFk = normFk1;
 	x = xk;
+	return i;
 }
 
 void solve::snu(bool method, bool dif)
 {
+	double nev = 1;
 	std::ofstream out("output.txt");
+	out.precision(17);
+	std::ofstream o("out.txt");
+	o.precision(17);
+	print(o);
 	int k = Fun.m - Fun.n;
 	normFk = normF0;
 	int exit = 1;
-	int iterB;
+	int iterB = 0;
+	if(abs(normF0) < eps1)
+		throw 2;
 	for (int i = 0; i < maxiter && exit != 0; i++)
 	{
-
+		if(nev < eps2 || iterB == maxiter)
+		{
+			exit = 0;
+			break;
+		}
 		jacoby(dif);
 		sortMatrix(k + method);
 		if (method)
@@ -175,16 +208,31 @@ void solve::snu(bool method, bool dif)
 		}
 		gauss();
 		iterB = iterationB();
+		nev = normFk / normF0;
+		print(i, out);
+		print(o);
 	}
 
 }
 
-void solve::print(int iter1, int iter2, std::ofstream &out)
+void solve::print(std::ofstream &out)
 {
-	out << iter1 << "\t" << iter2 << "\t" << B << "\t" << normFk / normF0 << std::endl;
-	for (int i = 0; i < Fun.m; i++)
+	for (int i = 0; i < Fun.n; i++)
 	{
 		out << x[i] << "\t";
 	}
+	out << std::endl;
+}
+
+void solve::print(int iter1, std::ofstream &out)
+{
+	out << "iter: " << iter1 + 1;
+	out << "; B: "  << 2 * B;
+	out << "; nev: " << normFk / normF0 << std::endl;
+	for (int i = 0; i < Fun.n; i++)
+	{
+		out << x[i] << "\t";
+	}
+	out << std::endl;
 	out << std::endl;
 }

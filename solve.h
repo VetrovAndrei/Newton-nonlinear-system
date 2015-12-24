@@ -19,7 +19,8 @@ public:
 	void sumElements(int k);
 	int iterationB();
 	void snu(bool method, bool dif);
-	void print(int iter1, int iter2, std::ofstream &out);
+	void print(int iter1, std::ofstream &out);
+	void print(std::ofstream &out);
 	solve(std::ifstream &size, std::ifstream &x0);
 	~solve(void);
 };
